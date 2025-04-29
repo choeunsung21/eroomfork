@@ -33,4 +33,4 @@ jobs:
       - name: Build and analyze
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./eroom/gradlew build sonar --info
+        run: cd eroom && ./gradlew build sonar --info
