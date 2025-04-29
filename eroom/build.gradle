@@ -27,6 +27,18 @@ repositories {
 	}
 }
 
+// sonar cloud
+plugins {
+  id "org.sonarqube" version "6.0.1.5171"
+}
+
+sonar {
+  properties {
+    property "sonar.projectKey", "choeunsung21_eroomfork"
+    property "sonar.organization", "choeunsung21"
+    property "sonar.host.url", "https://sonarcloud.io"
+  }
+}
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -56,20 +68,6 @@ dependencies {
     
 	// puppeteer API
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
-	
-	// sonar cloud
-	plugins {
-	  id "org.sonarqube" version "6.0.1.5171"
-	}
-	
-	sonar {
-	  properties {
-	    property "sonar.projectKey", "choeunsung21_eroomfork"
-	    property "sonar.organization", "choeunsung21"
-	    property "sonar.host.url", "https://sonarcloud.io"
-	  }
-	}
-
 }
 
 tasks.named('test') {
