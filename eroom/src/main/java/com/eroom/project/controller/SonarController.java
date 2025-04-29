@@ -12,6 +12,7 @@ import org.springframework.boot.configurationprocessor.json.JSONArray;
 import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.eroom.project.dto.QualityMeasureDto;
@@ -67,16 +68,38 @@ public class SonarController {
     
     // PR별 품질 검사
     @GetMapping("/api/sonar/quality/pr/{prNumber}")
-    public String getSonarQualityForPr(@PathVariable String prNumber) {
+    @ResponseBody
+    public String getSonarMetricsForPr(@PathVariable("prNumber") String prNumber) {
         try {
-            String apiUrl = "https://sonarcloud.io/api/project_analyses/search?project=choeunsung21_eroomfork&pullRequest=" + prNumber;
+            String componentKey = "choeunsung21_eroomfork";
+            String metrics = "bugs,vulnerabilities,code_smells,coverage,duplicated_lines_density";
+            String apiUrl = String.format(
+                "https://sonarcloud.io/api/measures/component?component=%s&pullRequest=%s&metricKeys=%s",
+                componentKey, prNumber, metrics
+            );
 
             URL url = new URL(apiUrl);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
 
-            String encodedAuth = Base64.getEncoder().encodeToString((TOKEN + ":").getBytes());
+            String token = "4907d00f45379c983c1042df8a3e1d7a1b5e0b65"; // ← 실제 토큰으로 교체
+            String encodedAuth = Base64.getEncoder().encodeToString((token + ":").getBytes());
             conn.setRequestProperty("Authorization", "Basic " + encodedAuth);
+
+            int responseCode = conn.getResponseCode();
+            System.out.println("응답 코드: " + responseCode);  // ← 디버깅 핵심
+
+            if (responseCode != 200) {
+                BufferedReader errorReader = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
+                StringBuilder errorResponse = new StringBuilder();
+                String line;
+                while ((line = errorReader.readLine()) != null) {
+                    errorResponse.append(line);
+                }
+                errorReader.close();
+                System.out.println("에러 응답 본문: " + errorResponse);
+                return "API 실패: " + errorResponse;
+            }
 
             BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             StringBuilder response = new StringBuilder();
@@ -89,8 +112,8 @@ public class SonarController {
             return response.toString();
 
         } catch (Exception e) {
-            e.printStackTrace();
-            return "{\"error\":\"Failed to fetch SonarCloud PR data\"}";
+            e.printStackTrace();  // ← 콘솔 로그 확인 필수
+            return "서버 에러: " + e.getMessage();
         }
     }
 
